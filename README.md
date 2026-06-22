@@ -6,6 +6,9 @@ product, customer, regional, and forecasting insights through interactive charts
 
 ---
 
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-live-brightgreen)](https://sakshi89017.github.io/Commerce-Dashboard/)
+
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -238,6 +241,12 @@ gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app()"
 ## API Reference
 
 All endpoints return:
+
+---
+
+**Hosting the backend (quick note)**
+
+If you deploy the frontend to GitHub Pages the site is static and needs a publicly reachable backend for authentication and API requests. See `backend/DEPLOY.md` for quick deployment instructions (Render / Railway / Fly.io). After hosting the backend, set `VITE_API_URL` to the backend's base API URL (for example `https://api.example.com/api`) and rebuild the frontend.
 ```json
 { "success": true, "data": {}, "message": "Success" }
 ```

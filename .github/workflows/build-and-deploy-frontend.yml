@@ -1,9 +1,9 @@
-name: Deploy Frontend to GitHub Pages
+name: Build and Deploy Frontend
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -13,25 +13,26 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18'
+          cache: 'npm'
 
       - name: Install dependencies
-        working-directory: frontend
-        run: npm ci
+        run: |
+          cd frontend
+          npm ci
 
       - name: Build frontend
-        working-directory: frontend
         env:
           VITE_API_URL: ${{ secrets.BACKEND_URL }}
-        run: npm run build
+        run: |
+          cd frontend
+          npm run build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
@@ -44,11 +45,8 @@ jobs:
     permissions:
       pages: write
       id-token: write
-
     environment:
       name: github-pages
-      url: https://sakshi89017.github.io/Commerce-Dashboard/
-
     steps:
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v5
