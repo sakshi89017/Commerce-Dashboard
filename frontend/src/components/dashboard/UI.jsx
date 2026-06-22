@@ -1,8 +1,9 @@
 import { TrendingUp, TrendingDown } from 'lucide-react'
 import { fmt, cx } from '../../utils/helpers'
+import { Sparkline } from '../charts/Charts'
 
 // ── KPI Card ──────────────────────────────────────────────────
-export function KPICard({ title, value, format = 'currency', growth, icon: Icon, color = 'blue', loading }) {
+export function KPICard({ title, value, format = 'currency', growth, icon: Icon, color = 'blue', loading, sparkData }) {
   const colors = {
     blue:   { bg: 'bg-blue-50 dark:bg-blue-900/20',   icon: 'text-blue-600 dark:text-blue-400' },
     green:  { bg: 'bg-emerald-50 dark:bg-emerald-900/20', icon: 'text-emerald-600 dark:text-emerald-400' },
@@ -36,7 +37,21 @@ export function KPICard({ title, value, format = 'currency', growth, icon: Icon,
 
       {loading
         ? <div className="skeleton h-8 w-32 mt-1" />
-        : <p className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{displayValue()}</p>
+        : (
+          <div className="flex items-center gap-3 mt-1">
+            <p className="kpi-value" data-count={typeof value === 'number' ? value : ''}>{displayValue()}</p>
+            {sparkData && (
+              <Sparkline
+                data={sparkData}
+                color={
+                  {
+                    blue: '#3b82f6', green: '#10b981', amber: '#f59e0b', purple: '#8b5cf6', red: '#ef4444', cyan: '#06b6d4'
+                  }[color] || '#3b82f6'
+                }
+              />
+            )}
+          </div>
+        )
       }
 
       {g && !loading && (

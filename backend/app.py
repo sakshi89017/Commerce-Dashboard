@@ -83,10 +83,38 @@ def create_app(db_url: str = None) -> Flask:
                reports_bp, filters_bp]:
         app.register_blueprint(bp)
 
+    # ── Error handlers ────────────────────────────────────────
+    @app.errorhandler(404)
+    def not_found(e):
+        return jsonify({"success": False, "message": "Endpoint not found"}), 404
+
+    @app.errorhandler(500)
+    def server_error(e):
+        logger.exception(f"Server error: {e}")
+        return jsonify({"success": False, "message": "Internal server error"}), 500
+
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        logger.exception(f"Unhandled exception: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
     # ── Health check ──────────────────────────────────────────
     @app.route("/api/health")
     def health():
-        return jsonify({"status": "ok", "service": "Commerce Dashboard API"})
+        try:
+            db.session.execute("SELECT 1")
+            return jsonify({
+                "status": "ok",
+                "service": "Commerce Dashboard API",
+                "database": "connected"
+            }), 200
+        except Exception as e:
+            logger.error(f"Health check failed: {e}")
+            return jsonify({
+                "status": "error",
+                "service": "Commerce Dashboard API",
+                "database": "disconnected"
+            }), 503
 
     # ── Create tables and seed data ───────────────────────────
     with app.app_context():

@@ -49,7 +49,7 @@ export default function OverviewPage() {
   const kpis = data?.kpis || {}
 
   const KPI_LIST = [
-    { key: 'total_revenue',   title: 'Total Revenue',    format: 'currency', icon: DollarSign,   color: 'blue',   growth: kpis.revenue_growth },
+    { key: 'total_revenue',   title: 'Total Revenue',    format: 'currency', icon: DollarSign,   color: 'blue',   growth: kpis.revenue_growth, spark: (data?.sales_trend || []).map(d => ({ revenue: d.revenue })) },
     { key: 'total_orders',    title: 'Total Orders',     format: 'number',   icon: ShoppingCart,  color: 'purple' },
     { key: 'total_customers', title: 'Customers',        format: 'number',   icon: Users,         color: 'cyan' },
     { key: 'total_profit',    title: 'Total Profit',     format: 'currency', icon: TrendingUp,    color: 'green' },
@@ -86,6 +86,7 @@ export default function OverviewPage() {
             color={k.color}
             growth={k.growth}
             loading={loading}
+            sparkData={k.spark}
           />
         ))}
       </div>

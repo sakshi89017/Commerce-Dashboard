@@ -4,13 +4,16 @@
 
 @layer base {
   :root {
-    --bg-primary:    #f8fafc;
-    --bg-secondary:  #ffffff;
+    --bg-primary:    #ffffff;
+    --bg-secondary:  #f8fafc;
     --bg-card:       #ffffff;
     --text-primary:  #0f172a;
     --text-secondary:#475569;
     --text-muted:    #94a3b8;
-    --border:        #e2e8f0;
+    --border:        #e6eef8;
+    --accent:        #0ea5e9; /* sky-500 */
+    --accent-2:      #6366f1; /* indigo-500 */
+    --card-elev:     0 8px 24px rgba(16,24,40,0.06);
   }
 
   .dark {
@@ -42,7 +45,9 @@
 
 @layer components {
   .card {
-    @apply rounded-xl border bg-white dark:bg-slate-800 dark:border-slate-700 shadow-sm;
+    @apply rounded-xl border bg-white dark:bg-slate-800 dark:border-slate-700;
+    box-shadow: var(--card-elev);
+    transition: transform 240ms cubic-bezier(.2,.9,.3,1), box-shadow 240ms ease;
   }
 
   .btn-primary {
@@ -78,7 +83,8 @@
   }
 
   .kpi-card {
-    @apply card p-5 flex flex-col gap-3 hover:shadow-md transition-shadow;
+    @apply card p-5 flex flex-col gap-3;
+    will-change: transform, box-shadow;
   }
 
   .badge {
@@ -114,6 +120,48 @@
   0%   { opacity: 0; }
   100% { opacity: 1; }
 }
+
+/* Additional UI polish */
+@layer components {
+  .kpi-value {
+    @apply text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight;
+    background: linear-gradient(90deg,#0ea5e9,#6366f1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .card:hover { transform: translateY(-6px) rotateX(2deg); transition: transform 220ms ease; }
+
+  .card:active { transform: translateY(-2px) rotateX(1deg); }
+
+  .ui-ripple {
+    position: absolute; pointer-events: none; width: 12px; height: 12px; border-radius: 9999px;
+    transform: translate(-50%, -50%) scale(0); background: var(--accent-2, rgba(99,102,241,0.5));
+    animation: ripple 520ms cubic-bezier(.2,.8,.2,1) forwards; mix-blend-mode: screen;
+  }
+
+  .sidebar-indicator {
+    position: absolute; left: 6px; width: 4px; height: 36px; border-radius: 9999px;
+    background: linear-gradient(180deg,#3b82f6,#06b6d4); opacity: 0; transform: translateX(-6px);
+    transition: transform 180ms ease, opacity 180ms ease;
+  }
+
+  nav a:hover .sidebar-indicator, nav a[aria-current='true'] .sidebar-indicator {
+    opacity: 1; transform: translateX(0);
+  }
+}
+
+@keyframes ripple {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0.9 }
+  50% { opacity: 0.6 }
+  100% { transform: translate(-50%, -50%) scale(12); opacity: 0 }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .kpi-card, .btn-primary, .btn-secondary { transition: none !important; animation: none !important; }
+  .ui-ripple { display: none !important }
+}
+
 
 @keyframes slideUp {
   0%   { opacity: 0; transform: translateY(10px); }

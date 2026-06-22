@@ -54,7 +54,7 @@ export default function DashboardLayout() {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
-            <button className="relative p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+            <button className="relative p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 notification-btn" title="Notifications">
               <Bell className="w-5 h-5" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full" />
             </button>

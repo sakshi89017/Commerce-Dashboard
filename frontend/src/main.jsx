@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import App from './App'
 import './styles/globals.css'
+import initUI from './utils/uiEnhancements'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -19,6 +20,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           },
         }}
       />
+      {/* initialize small UI enhancements (keyboard shortcuts, notifications) */}
+      {typeof window !== 'undefined' && initUI()}
     </BrowserRouter>
   </React.StrictMode>
 )

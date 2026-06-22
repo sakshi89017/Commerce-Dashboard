@@ -73,6 +73,7 @@ export default function Sidebar({ collapsed, setCollapsed }) {
             }
             title={collapsed ? label : undefined}
           >
+            <span className="sidebar-indicator" aria-hidden="true" />
             <Icon className="w-4 h-4 flex-shrink-0" />
             {!collapsed && <span>{label}</span>}
           </NavLink>

@@ -33,12 +33,12 @@ export function RevenueTrendChart({ data = [], height = 280 }) {
       <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.15} />
-            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.01} />
+            <stop offset="5%"  stopColor={'var(--accent)'} stopOpacity={0.18} />
+            <stop offset="95%" stopColor={'var(--accent)'} stopOpacity={0.02} />
           </linearGradient>
           <linearGradient id="profGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor="#10b981" stopOpacity={0.15} />
-            <stop offset="95%" stopColor="#10b981" stopOpacity={0.01} />
+            <stop offset="5%"  stopColor={'var(--accent-2)'} stopOpacity={0.14} />
+            <stop offset="95%" stopColor={'var(--accent-2)'} stopOpacity={0.02} />
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--border, #e2e8f0)" vertical={false} />
@@ -50,10 +50,28 @@ export function RevenueTrendChart({ data = [], height = 280 }) {
           labelFormatter={formatXDate}
         />
         <Legend />
-        <Area type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} fill="url(#revGrad)" name="Revenue" dot={false} />
-        <Area type="monotone" dataKey="profit"  stroke="#10b981" strokeWidth={2} fill="url(#profGrad)" name="Profit" dot={false} />
+        <Area type="monotone" dataKey="revenue" stroke="var(--accent)" strokeWidth={2} fill="url(#revGrad)" name="Revenue" dot={{ r: 2 }} />
+        <Area type="monotone" dataKey="profit"  stroke="var(--accent-2)" strokeWidth={2} fill="url(#profGrad)" name="Profit" dot={{ r: 2 }} />
       </AreaChart>
     </ResponsiveContainer>
+  )
+}
+
+// ── Tiny sparkline for KPI cards ─────────────────────────────
+export function Sparkline({ data = [], color = '#3b82f6', height = 32, width = 80 }) {
+  const series = (data || []).map(d => ({ value: d.revenue ?? d.orders ?? d.value ?? 0 }))
+  return (
+    <div style={{ width, height }} className="inline-block align-middle">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={series} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+          <Line type="monotone" dataKey="value" stroke={color} strokeWidth={2} dot={false} />
+          <Tooltip
+            contentStyle={TOOLTIP_STYLE}
+            formatter={v => [v, 'Value']}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   )
 }
 
