@@ -119,6 +119,27 @@ Password: Admin@123
 
 ---
 
+## GitHub Pages Hosting
+
+The frontend is configured to deploy to GitHub Pages from the `frontend/dist` build output.
+
+### Deployment
+
+1. Push to the `main` branch.
+2. GitHub Actions builds the frontend and publishes it to the `gh-pages` branch.
+
+### Access
+
+Once deployed, the site will be available at:
+
+`https://sakshi89017.github.io/Commerce-Dashboard/`
+
+### Notes
+
+- The Vite base path is set to `/Commerce-Dashboard/` for GitHub Pages compatibility.
+- API calls still target `http://localhost:5000/api` in development via proxy.
+
+
 ### 2 — Frontend
 
 ```bash
