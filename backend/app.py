@@ -12,6 +12,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from werkzeug.security import generate_password_hash
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import text
 
 logging.basicConfig(
     level=logging.INFO,
@@ -28,14 +29,18 @@ def create_app(db_url: str = None) -> Flask:
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=8)
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 
-    # Database: SQLite for demo, MySQL for production
+    # Database: SQLite for demo, MySQL/Postgres for production
     if db_url:
         app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     elif os.getenv("DATABASE_URL"):
-        app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+        # Render/Heroku fix: postgres:// -> postgresql://
+        db_url = os.getenv("DATABASE_URL")
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+        app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     else:
-        # Demo mode: SQLite in /tmp
-        db_path = "/tmp/commerce_dashboard.db"
+        # Demo mode: SQLite in current directory instead of /tmp
+        db_path = "commerce_dashboard.db"
         app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
         logger.info(f"Using SQLite demo database: {db_path}")
 
@@ -43,10 +48,10 @@ def create_app(db_url: str = None) -> Flask:
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True}
 
     # Upload settings
-    app.config["UPLOAD_FOLDER"] = os.getenv("UPLOAD_FOLDER", "/tmp/commerce_uploads")
+    app.config["UPLOAD_FOLDER"] = os.getenv("UPLOAD_FOLDER", "uploads")
     app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
     app.config["ALLOWED_EXTENSIONS"] = {"csv", "xlsx", "xls"}
-    app.config["REPORTS_FOLDER"] = os.getenv("REPORTS_FOLDER", "/tmp/commerce_reports")
+    app.config["REPORTS_FOLDER"] = os.getenv("REPORTS_FOLDER", "reports")
 
     # ── Extensions ────────────────────────────────────────────
     from extensions import db, jwt
@@ -103,7 +108,9 @@ def create_app(db_url: str = None) -> Flask:
     @app.route("/api/health")
     def health():
         try:
-            db.session.execute("SELECT 1")
+            # SQLAlchemy 2.0+ requires text() for raw SQL
+            db.session.execute(text("SELECT 1"))
+            db.session.commit()
             return jsonify({
                 "status": "ok",
                 "service": "Commerce Dashboard API",
@@ -114,7 +121,8 @@ def create_app(db_url: str = None) -> Flask:
             return jsonify({
                 "status": "error",
                 "service": "Commerce Dashboard API",
-                "database": "disconnected"
+                "database": "disconnected",
+                "error": str(e)
             }), 503
 
     # ── Create tables and seed data ───────────────────────────
