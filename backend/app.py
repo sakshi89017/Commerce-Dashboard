@@ -18,7 +18,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 def create_app(db_url: str = None) -> Flask:
     app = Flask(__name__)
 
@@ -54,8 +53,9 @@ def create_app(db_url: str = None) -> Flask:
     db.init_app(app)
     jwt.init_app(app)
 
+    origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:5173").split(",")
     CORS(app,
-         resources={r"/api/*": {"origins": "*"}},
+         resources={r"/api/*": {"origins": origins}},
          supports_credentials=True)
 
     # ── JWT error handlers ────────────────────────────────────
@@ -123,7 +123,6 @@ def create_app(db_url: str = None) -> Flask:
 
     return app
 
-
 def _seed_data(db):
     """Seed admin user and sample data if tables are empty."""
     from models.models import User, Order
@@ -143,7 +142,6 @@ def _seed_data(db):
     # Auto-load sample data if DB is empty
     if Order.query.count() == 0:
         _load_sample_data(db)
-
 
 def _load_sample_data(db):
     """Load the generated CSV sample data into the database."""
@@ -172,7 +170,7 @@ def _load_sample_data(db):
     except Exception as e:
         logger.exception(f"Sample data load failed: {e}")
 
-
 if __name__ == "__main__":
     app = create_app()
     app.run(host="0.0.0.0", port=5000, debug=True)
+    
