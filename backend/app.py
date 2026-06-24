@@ -11,6 +11,7 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from werkzeug.security import generate_password_hash
+from sqlalchemy.exc import IntegrityError
 
 logging.basicConfig(
     level=logging.INFO,
@@ -127,21 +128,33 @@ def _seed_data(db):
     """Seed admin user and sample data if tables are empty."""
     from models.models import User, Order
 
-    # Admin user
-    if not User.query.filter_by(email="admin@dashboard.com").first():
-        admin = User(
-            email="admin@dashboard.com",
-            password_hash=generate_password_hash("Admin@123"),
-            full_name="Admin User",
-            role="admin",
-        )
-        db.session.add(admin)
-        db.session.commit()
-        logger.info("Created default admin user: admin@dashboard.com / Admin@123")
+    # Admin user - wrapped to handle gunicorn worker race conditions
+    try:
+        if not User.query.filter_by(email="admin@dashboard.com").first():
+            admin = User(
+                email="admin@dashboard.com",
+                password_hash=generate_password_hash("Admin@123"),
+                full_name="Admin User",
+                role="admin",
+            )
+            db.session.add(admin)
+            db.session.commit()
+            logger.info("Created default admin user: admin@dashboard.com / Admin@123")
+        else:
+            logger.info("Admin user already exists, skipping creation")
+    except IntegrityError:
+        db.session.rollback()
+        logger.info("Admin user already exists - caught IntegrityError from concurrent worker")
+    except Exception as e:
+        db.session.rollback()
+        logger.exception(f"Failed to seed admin user: {e}")
 
     # Auto-load sample data if DB is empty
-    if Order.query.count() == 0:
-        _load_sample_data(db)
+    try:
+        if Order.query.count() == 0:
+            _load_sample_data(db)
+    except Exception as e:
+        logger.exception(f"Sample data check failed: {e}")
 
 def _load_sample_data(db):
     """Load the generated CSV sample data into the database."""
