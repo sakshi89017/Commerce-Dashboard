@@ -17,9 +17,8 @@ COPY . .
 
 ENV FLASK_ENV=production
 ENV HOST=0.0.0.0
-ENV PORT=5000
 
-EXPOSE 5000
+EXPOSE 10000
 
-# Run the app with Gunicorn using the factory app:create_app()
-CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:5000", "app:create_app()"]
+# Run with Gunicorn using Render's PORT env var
+CMD ["sh", "-c", "gunicorn -w 2 -b 0.0.0.0:$PORT app:create_app()"]
