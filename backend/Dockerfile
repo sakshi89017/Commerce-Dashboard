@@ -19,4 +19,4 @@ ENV HOST=0.0.0.0
 
 EXPOSE 10000
 
-CMD gunicorn -w 2 -b 0.0.0.0:$PORT app:create_app()
+CMD ["sh", "-c", "gunicorn --workers 2 --bind 0.0.0.0:${PORT:-10000} 'app:create_app()'"]
