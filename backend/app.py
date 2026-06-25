@@ -150,14 +150,14 @@ def create_app(db_url: str = None) -> Flask:
     # ── Create tables and seed data ───────────────────────────
     with app.app_context():
         db.create_all()
-        _seed_data(db)
+        # _seed_data(db) # Disabled: was causing crashes with multiple gunicorn workers
 
     # ── Manual seed command ───────────────────────────────────
     @app.cli.command("seed")
     def seed():
         """Flask CLI command to seed database. Run: flask seed"""
         from extensions import db
-        _load_sample_data_manual(db)
+        _seed_data(db)
         print("✅ Seeded 500 orders, 20 customers, 10 products")
 
     return app
