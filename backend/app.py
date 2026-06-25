@@ -5,7 +5,7 @@ Supports MySQL (production) and SQLite (demo/testing).
 
 import os
 import logging
-from datetime import timedelta
+from datetime import timedelta, date
 
 from flask import Flask, jsonify
 from flask_cors import CORS
@@ -130,6 +130,14 @@ def create_app(db_url: str = None) -> Flask:
         db.create_all()
         _seed_data(db)
 
+    # ── Manual seed command ───────────────────────────────────
+    @app.cli.command("seed")
+    def seed():
+        """Flask CLI command to seed database. Run: flask seed"""
+        from extensions import db
+        _load_sample_data_manual(db)
+        print("✅ Seeded 500 orders, 20 customers, 10 products")
+
     return app
 
 def _seed_data(db):
@@ -190,6 +198,116 @@ def _load_sample_data(db):
         logger.info(f"Sample data loaded: {result['imported']} orders imported")
     except Exception as e:
         logger.exception(f"Sample data load failed: {e}")
+
+def _load_sample_data_manual(db):
+    """Create demo data directly in database without CSV."""
+    from datetime import timedelta
+    import random
+    from models.models import Category, Region, Customer, Product, Order
+
+    logger.info("Creating demo data...")
+    try:
+        # Categories
+        categories = {}
+        for name in ["Electronics", "Clothing", "Books", "Sports"]:
+            existing = Category.query.filter_by(name=name).first()
+            if existing:
+                categories[name] = existing
+            else:
+                cat = Category(name=name)
+                db.session.add(cat)
+                db.session.flush()
+                categories[name] = cat
+
+        # Regions
+        regions = {}
+        for name in ["North", "South", "East", "West"]:
+            existing = Region.query.filter_by(name=name).first()
+            if existing:
+                regions[name] = existing
+            else:
+                reg = Region(name=name)
+                db.session.add(reg)
+                db.session.flush()
+                regions[name] = reg
+
+        db.session.commit()
+
+        # Customers
+        customers = []
+        for i in range(1, 21):
+            customer_id = f"CUST{i:03}"
+            cust = Customer.query.filter_by(customer_id=customer_id).first()
+            if not cust:
+                cust = Customer(
+                    customer_id=customer_id,
+                    customer_name=f"Customer {i}",
+                    segment="Regular",
+                )
+                db.session.add(cust)
+                db.session.flush()
+            customers.append(cust)
+        db.session.commit()
+
+        # Products
+        products = []
+        category_list = list(categories.values())
+        for i in range(1, 11):
+            product_id = f"PROD{i:03}"
+            prod = Product.query.filter_by(product_id=product_id).first()
+            if not prod:
+                prod = Product(
+                    product_id=product_id,
+                    name=f"Product {i}",
+                    category_id=random.choice(category_list).id,
+                    base_price=random.randint(500, 5000),
+                )
+                db.session.add(prod)
+                db.session.flush()
+            products.append(prod)
+        db.session.commit()
+
+        # Orders - 500 Demo Orders
+        region_list = list(regions.values())
+        for i in range(1, 501):
+            order_id = f"ORD{i:05}"
+            existing_order = Order.query.filter_by(order_id=order_id).first()
+            if existing_order:
+                continue
+
+            customer = random.choice(customers)
+            product = random.choice(products)
+            region = random.choice(region_list)
+            quantity = random.randint(1, 5)
+            price = float(product.base_price)
+            revenue = quantity * price
+            cost = revenue * 0.70
+            profit = revenue - cost
+
+            order = Order(
+                order_id=order_id,
+                order_date=date.today() - timedelta(days=random.randint(0, 365)),
+                customer_id=customer.id,
+                product_id=product.id,
+                quantity=quantity,
+                unit_price=price,
+                revenue=revenue,
+                cost=cost,
+                profit=profit,
+                region_id=region.id,
+                state="Demo State",
+                city="Demo City",
+                payment_method="UPI",
+                upload_batch="DEMO-DATA",
+            )
+            db.session.add(order)
+            if i % 100 == 0:
+                db.session.commit()
+        db.session.commit()
+        logger.info("Demo data created successfully: 500 orders")
+    except Exception as e:
+        db.session.rollback()
+        logger.exception(f"Failed creating demo data: {e}")
 
 if __name__ == "__main__":
     app = create_app()
