@@ -150,7 +150,7 @@ def create_app(db_url: str = None) -> Flask:
     # ── Create tables and seed data ───────────────────────────
     with app.app_context():
         db.create_all()
-        # _seed_data(db) # Disabled: was causing crashes with multiple gunicorn workers
+        _seed_admin(db)
 
     # ── Manual seed command ───────────────────────────────────
     @app.cli.command("seed")
@@ -330,6 +330,29 @@ def _load_sample_data_manual(db):
     except Exception as e:
         db.session.rollback()
         logger.exception(f"Failed creating demo data: {e}")
+
+def _seed_admin(db):
+    """Seed default admin user if it does not exist."""
+    from models.models import User
+    from werkzeug.security import generate_password_hash
+    from sqlalchemy.exc import IntegrityError
+    try:
+        if not User.query.filter_by(email="admin@dashboard.com").first():
+            admin = User(
+                email="admin@dashboard.com",
+                password_hash=generate_password_hash("Admin@123"),
+                full_name="Admin User",
+                role="admin",
+            )
+            db.session.add(admin)
+            db.session.commit()
+            logger.info("Created default admin user: admin@dashboard.com / Admin@123")
+    except IntegrityError:
+        db.session.rollback()
+        logger.info("Admin user already exists - caught IntegrityError from concurrent worker")
+    except Exception as e:
+        db.session.rollback()
+        logger.exception(f"Failed to seed admin user: {e}")
 
 if __name__ == "__main__":
     app = create_app()
