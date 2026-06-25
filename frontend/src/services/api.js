@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const BASE_URL = 'https://commerce-api-ucbm.onrender.com/api'
+const BASE_URL = import.meta.env.VITE_API_URL // ✅ Now uses GitHub Actions env
 
 const api = axios.create({
   baseURL: BASE_URL,
