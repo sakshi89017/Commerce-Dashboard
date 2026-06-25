@@ -125,6 +125,28 @@ def create_app(db_url: str = None) -> Flask:
                 "error": str(e)
             }), 503
 
+    # ── TEMP SEED ROUTE - DELETE AFTER USE ────────────────────
+    @app.route("/api/seed", methods=["POST"])
+    def seed_database():
+        """One-time route to populate DB. DELETE AFTER RUNNING ONCE."""
+        try:
+            from extensions import db
+            from models.models import Order
+            if Order.query.count() > 0:
+                return jsonify({
+                    "success": False,
+                    "message": "Database already has data. Delete this route."
+                }), 400
+
+            _load_sample_data_manual(db)
+            return jsonify({
+                "success": True,
+                "message": "Demo data created: 500 orders, 20 customers, 10 products"
+            }), 201
+        except Exception as e:
+            logger.exception(f"Seed failed: {e}")
+            return jsonify({"success": False, "message": str(e)}), 500
+
     # ── Create tables and seed data ───────────────────────────
     with app.app_context():
         db.create_all()
