@@ -1,6 +1,10 @@
 import axios from 'axios'
 
-const BASE_URL = import.meta.env.VITE_API_URL // ✅ Now uses GitHub Actions env
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
+if (!import.meta.env.VITE_API_URL && import.meta.env.PROD) {
+  console.error('VITE_API_URL not set in production build!')
+}
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -37,11 +41,11 @@ api.interceptors.response.use(
           return api(original)
         } catch {
           localStorage.clear()
-          window.location.href = '/login'
+          window.location.href = '/Commerce-Dashboard/login'
         }
       } else {
         localStorage.clear()
-        window.location.href = '/login'
+        window.location.href = '/Commerce-Dashboard/login'
       }
     }
     return Promise.reject(error)
@@ -50,10 +54,10 @@ api.interceptors.response.use(
 
 // ── Auth ──────────────────────────────────────────────────────
 export const authAPI = {
-  login:          (credentials) => api.post('/auth/login', credentials),
-  register:       (data)        => api.post('/auth/register', data),
-  me:             ()            => api.get('/auth/me'),
-  changePassword: (data)        => api.post('/auth/change-password', data),
+  login: (credentials) => api.post('/auth/login', credentials),
+  register: (data) => api.post('/auth/register', data),
+  me: () => api.get('/auth/me'),
+  changePassword: (data) => api.post('/auth/change-password', data),
 }
 
 // ── Dashboard ─────────────────────────────────────────────────
@@ -93,7 +97,7 @@ export const forecastAPI = {
 
 // ── Upload ────────────────────────────────────────────────────
 export const uploadAPI = {
-  uploadFile:   (formData, onProgress) =>
+  uploadFile: (formData, onProgress) =>
     api.post('/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: onProgress,
